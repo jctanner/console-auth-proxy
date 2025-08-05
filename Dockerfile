@@ -25,6 +25,8 @@ ARG BUILD_DATE=unknown
 
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -v \
+    -x \
     -ldflags="-w -s \
     		-X github.com/jctanner/console-auth-proxy/internal/version.Version=${VERSION} \
 		-X github.com/jctanner/console-auth-proxy/internal/version.GitCommit=${GIT_COMMIT} \
