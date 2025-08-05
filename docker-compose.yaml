@@ -12,9 +12,9 @@ services:
       # Server Configuration
       CAP_SERVER_LISTEN_ADDRESS: "0.0.0.0:8080"
       
-      # OIDC Configuration
+      # OIDC Configuration - Using external Keycloak
       CAP_AUTH_AUTH_SOURCE: "oidc"
-      CAP_AUTH_ISSUER_URL: "http://keycloak:8080/realms/console-proxy"
+      CAP_AUTH_ISSUER_URL: "https://keycloak.tannerjc.net/realms/console-proxy"
       CAP_AUTH_CLIENT_ID: "console-auth-proxy"
       CAP_AUTH_CLIENT_SECRET: "console-secret-key"
       CAP_AUTH_REDIRECT_URL: "http://localhost:8080/auth/callback"
@@ -30,37 +30,36 @@ services:
       # Logging
       CAP_OBSERVABILITY_LOGGING_LEVEL: "debug"
     depends_on:
-      - keycloak
       - backend-app
     networks:
       - auth-proxy-net
     restart: unless-stopped
 
-  # Keycloak as OIDC Provider
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    ports:
-      - "8081:8080"  # Expose on different port to avoid conflict
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HTTP_RELATIVE_PATH: "/"
-      KC_HOSTNAME_STRICT: "false"
-      KC_HOSTNAME_STRICT_HTTPS: "false"
-      KC_HTTP_ENABLED: "true"
-    command:
-      - start-dev
-    volumes:
-      - keycloak-data:/opt/keycloak/data/
-    networks:
-      - auth-proxy-net
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/console-proxy"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+  # Keycloak as OIDC Provider - Using external instance
+  # keycloak:
+  #   image: quay.io/keycloak/keycloak:23.0
+  #   ports:
+  #     - "8081:8080"  # Expose on different port to avoid conflict
+  #   environment:
+  #     KEYCLOAK_ADMIN: admin
+  #     KEYCLOAK_ADMIN_PASSWORD: admin
+  #     KC_HTTP_RELATIVE_PATH: "/"
+  #     KC_HOSTNAME_STRICT: "false"
+  #     KC_HOSTNAME_STRICT_HTTPS: "false"
+  #     KC_HTTP_ENABLED: "true"
+  #   command:
+  #     - start-dev
+  #   volumes:
+  #     - keycloak-data:/opt/keycloak/data/
+  #   networks:
+  #     - auth-proxy-net
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8080/realms/console-proxy"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 60s
 
   # Echo service backend - returns all headers and request info
   backend-app:

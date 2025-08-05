@@ -1,146 +1,72 @@
-# Docker Compose Testing Environment
+# Docker Development Environment
 
-This directory contains a complete Docker Compose setup for testing the console-auth-proxy with a Keycloak OIDC provider and an echo service backend.
-
-## Services
-
-- **console-auth-proxy**: The main authentication proxy service (port 8080)
-- **keycloak**: OIDC authentication provider (port 8081) 
-- **backend-app**: Echo service that returns all headers and request info (port 3000)
+This directory contains Docker configuration and setup scripts for the console-auth-proxy development environment.
 
 ## Quick Start
 
-1. **Start all services:**
+1. **Set up environment variables** (required for external Keycloak):
    ```bash
-   docker-compose up --build
+   # Copy the example file
+   cp env.example .env
+   
+   # Edit .env and set your Keycloak admin password
+   # KEYCLOAK_ADMIN_PASSWORD=your-actual-password
    ```
 
-2. **Wait for services to be ready** (about 60-90 seconds)
-   - Console Auth Proxy: http://localhost:8080
-   - Keycloak Admin: http://localhost:8081 (admin/admin)
-   - Backend Echo Service: http://localhost:3000
+2. **Load environment variables**:
+   ```bash
+   source .env
+   # or
+   export KEYCLOAK_ADMIN_PASSWORD="your-password"
+   ```
 
-3. **Test the authentication flow:**
-   - Visit http://localhost:8080
-   - You'll be redirected to Keycloak for login
-   - Use one of the test users:
-     - Username: `testuser` / Password: `testpass`
-     - Username: `admin` / Password: `admin`
-   - After login, you'll see the echo service response with all forwarded headers
+3. **Set up Keycloak realm and client**:
+   ```bash
+   ./docker/setup-keycloak.sh
+   ```
 
-## What You'll See
+4. **Start the development environment**:
+   ```bash
+   podman compose up -d
+   ```
 
-When successfully authenticated, the echo service will return a JSON response showing:
+## Environment Variables
 
-```json
-{
-  "path": "/",
-  "headers": {
-    "authorization": "Bearer eyJhbGciOiJSUzI1NiIs...",
-    "x-forwarded-user": "testuser",
-    "x-forwarded-user-id": "12345678-1234-1234-1234-123456789abc",
-    "x-forwarded-email": "testuser@example.com",
-    "host": "backend-app:8080",
-    "user-agent": "console-auth-proxy/dev",
-    ...
-  },
-  "method": "GET",
-  "body": "",
-  "fresh": false,
-  "hostname": "backend-app",
-  "ip": "::ffff:172.x.x.x",
-  "ips": [],
-  "protocol": "http",
-  "query": {},
-  "subdomains": [],
-  "xhr": false
-}
-```
+### Required
+- `KEYCLOAK_ADMIN_PASSWORD`: Password for the Keycloak admin user
 
-## Key Headers to Look For
+### Optional
+- `KEYCLOAK_URL`: Keycloak server URL (default: `https://keycloak.tannerjc.net`)
+- `KEYCLOAK_ADMIN`: Keycloak admin username (default: `admin`)
 
-The console-auth-proxy forwards these authentication headers to the backend:
+## Services
 
-- `Authorization: Bearer <jwt-token>` - The OIDC access token
-- `X-Forwarded-User: <username>` - The authenticated username
-- `X-Forwarded-User-ID: <user-id>` - The user's unique ID
-- `X-Forwarded-Email: <email>` - The user's email address
+### Console Auth Proxy
+- **Port**: 8080
+- **URL**: http://localhost:8080
+- Authenticates via external Keycloak and forwards requests to backend
 
-## Testing Different Scenarios
+### Backend Echo Service  
+- **Port**: 3000
+- **URL**: http://localhost:3000
+- Returns all HTTP headers for testing proxy behavior
 
-### Test Direct Backend Access
-```bash
-# This should work (no auth required)
-curl http://localhost:3000
-```
-
-### Test Proxy Without Authentication
-```bash
-# This should redirect to Keycloak
-curl -L http://localhost:8080
-```
-
-### Test Health Endpoints
-```bash
-# These should work without authentication
-curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/metrics
-curl http://localhost:8080/version
-```
-
-## Keycloak Configuration
-
-The Keycloak realm is pre-configured with:
-
+### External Keycloak
+- **URL**: https://keycloak.tannerjc.net
+- **Admin Console**: https://keycloak.tannerjc.net/admin
 - **Realm**: `console-proxy`
-- **Client ID**: `console-auth-proxy`
-- **Client Secret**: `console-secret-key`
-- **Test Users**:
-  - `testuser` / `testpass`
-  - `admin` / `admin`
+- **Test User**: `testuser/testpass`
 
-## Troubleshooting
+## Testing
 
-### Services Not Starting
-```bash
-# Check service status
-docker-compose ps
+1. Visit http://localhost:8080
+2. You'll be redirected to Keycloak for authentication
+3. Login with `testuser/testpass`
+4. After authentication, you'll see the backend echo service response
+5. Check http://localhost:3000 to see all forwarded headers
 
-# View logs
-docker-compose logs console-auth-proxy
-docker-compose logs keycloak
-docker-compose logs backend-app
-```
+## Security Notes
 
-### Keycloak Not Ready
-Wait for the health check to pass:
-```bash
-# Check if Keycloak is healthy
-curl http://localhost:8081/realms/console-proxy
-```
-
-### Authentication Issues
-1. Make sure Keycloak is fully started (check logs)
-2. Verify the realm configuration was imported
-3. Check console-auth-proxy logs for OIDC discovery issues
-
-### Clean Reset
-```bash
-# Stop and remove everything
-docker-compose down -v
-
-# Rebuild and restart
-docker-compose up --build
-```
-
-## Development
-
-### Modify Configuration
-Edit the environment variables in `docker-compose.yaml` to test different configurations.
-
-### Custom Keycloak Realm
-Modify `docker/keycloak-realm.json` to customize the OIDC configuration.
-
-### View Raw Tokens
-The echo service shows the raw JWT token in the `Authorization` header. You can decode it at https://jwt.io to see the claims.
+- Never commit `.env` files or passwords to git
+- The `.gitignore` already excludes `*.env` files
+- Use environment variables for all sensitive configuration

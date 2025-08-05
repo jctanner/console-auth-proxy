@@ -1,17 +1,34 @@
 #!/bin/bash
 set -e
 
-echo "Waiting for Keycloak to be ready..."
-until curl -f http://localhost:8081/admin/ > /dev/null 2>&1; do
-  echo "Keycloak not ready yet, waiting..."
+# External Keycloak configuration (can be overridden with environment variables)
+KEYCLOAK_URL="${KEYCLOAK_URL:-https://keycloak.tannerjc.net}"
+KEYCLOAK_ADMIN="${KEYCLOAK_ADMIN:-admin}"
+KEYCLOAK_PASSWORD="${KEYCLOAK_ADMIN_PASSWORD:-}"
+
+# Check if password is provided
+if [ -z "$KEYCLOAK_PASSWORD" ]; then
+  echo "❌ Error: KEYCLOAK_ADMIN_PASSWORD environment variable is required"
+  echo "Please set it with: export KEYCLOAK_ADMIN_PASSWORD='your-password'"
+  echo ""
+  echo "Optional environment variables:"
+  echo "  KEYCLOAK_URL (default: https://keycloak.tannerjc.net)"
+  echo "  KEYCLOAK_ADMIN (default: admin)"
+  exit 1
+fi
+
+echo "Connecting to external Keycloak at $KEYCLOAK_URL..."
+echo "Testing connectivity..."
+until curl -f $KEYCLOAK_URL/admin/ > /dev/null 2>&1; do
+  echo "Keycloak not reachable yet, waiting..."
   sleep 5
 done
 
 echo "Getting admin token..."
-ADMIN_TOKEN=$(curl -s -X POST http://localhost:8081/realms/master/protocol/openid-connect/token \
+ADMIN_TOKEN=$(curl -s -X POST $KEYCLOAK_URL/realms/master/protocol/openid-connect/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin" \
-  -d "password=admin" \
+  -d "username=$KEYCLOAK_ADMIN" \
+  -d "password=$KEYCLOAK_PASSWORD" \
   -d "grant_type=password" \
   -d "client_id=admin-cli" | jq -r .access_token)
 
@@ -21,7 +38,7 @@ if [ "$ADMIN_TOKEN" = "null" ] || [ -z "$ADMIN_TOKEN" ]; then
 fi
 
 echo "Creating console-proxy realm..."
-curl -s -X POST http://localhost:8081/admin/realms \
+curl -s -X POST $KEYCLOAK_URL/admin/realms \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -37,7 +54,7 @@ curl -s -X POST http://localhost:8081/admin/realms \
   }'
 
 echo "Creating OIDC client..."
-curl -s -X POST http://localhost:8081/admin/realms/console-proxy/clients \
+curl -s -X POST $KEYCLOAK_URL/admin/realms/console-proxy/clients \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -73,7 +90,7 @@ curl -s -X POST http://localhost:8081/admin/realms/console-proxy/clients \
   }'
 
 echo "Creating test user..."
-curl -s -X POST http://localhost:8081/admin/realms/console-proxy/users \
+curl -s -X POST $KEYCLOAK_URL/admin/realms/console-proxy/users \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -94,4 +111,4 @@ echo "✅ Keycloak setup complete!"
 echo "🎯 Realm: console-proxy"
 echo "👤 Test user: testuser/testpass"
 echo "🔑 Client: console-auth-proxy"
-echo "🌐 OIDC Endpoint: http://localhost:8081/realms/console-proxy"
+echo "🌐 OIDC Endpoint: $KEYCLOAK_URL/realms/console-proxy"
