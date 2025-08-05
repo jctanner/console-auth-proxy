@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for Console Auth Proxy
 
 # Build stage
-FROM golang:1.23-alpine AS builder
+FROM docker.io/library/golang:1.23-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache git ca-certificates tzdata
@@ -33,7 +33,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     ./cmd/console-auth-proxy
 
 # Final stage
-FROM alpine:3.19
+FROM docker.io/library/alpine:3.19
 
 # Install runtime dependencies
 RUN apk add --no-cache ca-certificates tzdata

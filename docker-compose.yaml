@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # Console Auth Proxy - the main service we're testing
+  console-auth-proxy:
+    build: .
+    ports:
+      - "8080:8080"
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do echo 'Starting console-auth-proxy...'; /usr/local/bin/console-auth-proxy && break || echo 'Failed to start, retrying in 5 seconds...'; sleep 5; done"]
+    environment:
+      # Server Configuration
+      CAP_SERVER_LISTEN_ADDRESS: "0.0.0.0:8080"
+      
+      # OIDC Configuration
+      CAP_AUTH_AUTH_SOURCE: "oidc"
+      CAP_AUTH_ISSUER_URL: "http://keycloak:8080/realms/console-proxy"
+      CAP_AUTH_CLIENT_ID: "console-auth-proxy"
+      CAP_AUTH_CLIENT_SECRET: "console-secret-key"
+      CAP_AUTH_REDIRECT_URL: "http://localhost:8080/auth/callback"
+      CAP_AUTH_COOKIE_PATH: "/"
+      
+      # Backend Configuration  
+      CAP_PROXY_BACKEND_URL: "http://backend-app:8080"
+      
+      # Development Settings
+      CAP_AUTH_SECURE_COOKIES: "false"  # Allow HTTP for local testing
+      CAP_AUTH_TLS_INSECURE_SKIP_VERIFY: "true"  # For self-signed certs in dev
+      
+      # Logging
+      CAP_OBSERVABILITY_LOGGING_LEVEL: "debug"
+    depends_on:
+      - keycloak
+      - backend-app
+    networks:
+      - auth-proxy-net
+    restart: unless-stopped
+
+  # Keycloak as OIDC Provider
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    ports:
+      - "8081:8080"  # Expose on different port to avoid conflict
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_RELATIVE_PATH: "/"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+    command:
+      - start-dev
+    volumes:
+      - keycloak-data:/opt/keycloak/data/
+    networks:
+      - auth-proxy-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/realms/console-proxy"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Echo service backend - returns all headers and request info
+  backend-app:
+    image: docker.io/mendhak/http-https-echo:31
+    ports:
+      - "3000:8080"  # Direct access for testing
+    environment:
+      HTTP_PORT: 8080
+      HTTPS_PORT: 8443
+    networks:
+      - auth-proxy-net
+    restart: unless-stopped
+
+  # Optional: Adminer for database management if needed
+  # adminer:
+  #   image: adminer
+  #   ports:
+  #     - "8082:8080"
+  #   networks:
+  #     - auth-proxy-net
+
+volumes:
+  keycloak-data:
+
+networks:
+  auth-proxy-net:
+    driver: bridge

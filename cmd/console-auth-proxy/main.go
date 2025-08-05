@@ -58,6 +58,14 @@ authentication module to provide OAuth2/OIDC authentication for backend applicat
 	viper.BindPFlags(rootCmd.PersistentFlags())
 	
 	// Map CLI flags to nested config structure
+	viper.BindPFlag("server.listen_address", rootCmd.PersistentFlags().Lookup("listen-address"))
+	viper.BindPFlag("proxy.backend.url", rootCmd.PersistentFlags().Lookup("backend-url"))
+	viper.BindPFlag("auth.auth_source", rootCmd.PersistentFlags().Lookup("auth-source"))
+	viper.BindPFlag("auth.issuer_url", rootCmd.PersistentFlags().Lookup("issuer-url"))
+	viper.BindPFlag("auth.client_id", rootCmd.PersistentFlags().Lookup("client-id"))
+	viper.BindPFlag("auth.client_secret", rootCmd.PersistentFlags().Lookup("client-secret"))
+	viper.BindPFlag("auth.redirect_url", rootCmd.PersistentFlags().Lookup("redirect-url"))
+	viper.BindPFlag("auth.secure_cookies", rootCmd.PersistentFlags().Lookup("secure-cookies"))
 	viper.BindPFlag("auth.tls.insecure_skip_verify", rootCmd.PersistentFlags().Lookup("auth-tls-insecure-skip-verify"))
 	viper.BindPFlag("auth.tls.server_name", rootCmd.PersistentFlags().Lookup("auth-tls-server-name"))
 	viper.BindPFlag("proxy.tls.insecure_skip_verify", rootCmd.PersistentFlags().Lookup("proxy-tls-insecure-skip-verify"))
@@ -157,6 +165,9 @@ func initConfig() error {
 	if err := viper.Unmarshal(cfg); err != nil {
 		return fmt.Errorf("failed to unmarshal config: %w", err)
 	}
+
+	// Apply defaults for any missing values
+	cfg.SetDefaults()
 
 	return nil
 }

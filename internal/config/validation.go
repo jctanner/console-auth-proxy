@@ -109,19 +109,21 @@ func (a *AuthConfig) Validate() error {
 		return fmt.Errorf("at least one scope is required")
 	}
 
-	// Validate Kubernetes configuration if not using in-cluster config
-	if !a.KubeConfig.InCluster {
-		if a.KubeConfig.ConfigPath == "" && a.KubeConfig.ServerURL == "" {
-			return fmt.Errorf("either kube_config.config_path or kube_config.server_url is required when not using in-cluster config")
-		}
-
-		if a.KubeConfig.ServerURL != "" {
-			if _, err := url.Parse(a.KubeConfig.ServerURL); err != nil {
-				return fmt.Errorf("kube_config.server_url is not a valid URL: %w", err)
+	// Validate Kubernetes configuration only for OpenShift auth source
+	if strings.ToLower(a.AuthSource) == "openshift" {
+		if !a.KubeConfig.InCluster {
+			if a.KubeConfig.ConfigPath == "" && a.KubeConfig.ServerURL == "" {
+				return fmt.Errorf("either kube_config.config_path or kube_config.server_url is required when not using in-cluster config")
 			}
 
-			if a.KubeConfig.BearerToken == "" && a.KubeConfig.BearerTokenFile == "" {
-				return fmt.Errorf("either kube_config.bearer_token or kube_config.bearer_token_file is required when using server_url")
+			if a.KubeConfig.ServerURL != "" {
+				if _, err := url.Parse(a.KubeConfig.ServerURL); err != nil {
+					return fmt.Errorf("kube_config.server_url is not a valid URL: %w", err)
+				}
+
+				if a.KubeConfig.BearerToken == "" && a.KubeConfig.BearerTokenFile == "" {
+					return fmt.Errorf("either kube_config.bearer_token or kube_config.bearer_token_file is required when using server_url")
+				}
 			}
 		}
 	}
