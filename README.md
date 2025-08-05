@@ -42,20 +42,20 @@ docker build -t console-auth-proxy .
 
 # Run with environment variables
 docker run -p 8080:8080 \
-  -e CAP_ISSUER_URL=https://your-oidc-provider.com \
-  -e CAP_CLIENT_ID=your-client-id \
-  -e CAP_CLIENT_SECRET=your-client-secret \
-  -e CAP_REDIRECT_URL=http://localhost:8080/auth/callback \
-  -e CAP_BACKEND_URL=http://your-backend:3000 \
+  -e CAP_AUTH_ISSUER_URL=https://your-oidc-provider.com \
+  -e CAP_AUTH_CLIENT_ID=your-client-id \
+  -e CAP_AUTH_CLIENT_SECRET=your-client-secret \
+  -e CAP_AUTH_REDIRECT_URL=http://localhost:8080/auth/callback \
+  -e CAP_PROXY_BACKEND_URL=http://your-backend:3000 \
   console-auth-proxy
 
 # Run with self-signed certificates (development)
 docker run -p 8080:8080 \
-  -e CAP_ISSUER_URL=https://self-signed-oidc.internal \
-  -e CAP_CLIENT_ID=your-client-id \
-  -e CAP_CLIENT_SECRET=your-client-secret \
-  -e CAP_REDIRECT_URL=http://localhost:8080/auth/callback \
-  -e CAP_BACKEND_URL=https://self-signed-app.internal \
+  -e CAP_AUTH_ISSUER_URL=https://self-signed-oidc.internal \
+  -e CAP_AUTH_CLIENT_ID=your-client-id \
+  -e CAP_AUTH_CLIENT_SECRET=your-client-secret \
+  -e CAP_AUTH_REDIRECT_URL=http://localhost:8080/auth/callback \
+  -e CAP_PROXY_BACKEND_URL=https://self-signed-app.internal \
   -e CAP_AUTH_TLS_INSECURE_SKIP_VERIFY=true \
   -e CAP_PROXY_TLS_INSECURE_SKIP_VERIFY=true \
   console-auth-proxy
@@ -194,16 +194,17 @@ The console-auth-proxy supports comprehensive CLI configuration. Here are common
 
 ### Environment Variable Equivalents
 
-All CLI flags can be set via environment variables with the `CAP_` prefix:
+All CLI flags can be set via environment variables with the `CAP_` prefix using nested structure:
 
 ```bash
 # Set via environment variables (useful for containers)
-export CAP_BACKEND_URL=http://localhost:3000
-export CAP_ISSUER_URL=https://your-oidc-provider.com
-export CAP_CLIENT_ID=your-client-id
-export CAP_CLIENT_SECRET=your-client-secret
-export CAP_REDIRECT_URL=http://localhost:8080/auth/callback
-export CAP_SECURE_COOKIES=true
+export CAP_SERVER_LISTEN_ADDRESS="0.0.0.0:8080"
+export CAP_PROXY_BACKEND_URL=http://localhost:3000
+export CAP_AUTH_ISSUER_URL=https://your-oidc-provider.com
+export CAP_AUTH_CLIENT_ID=your-client-id
+export CAP_AUTH_CLIENT_SECRET=your-client-secret
+export CAP_AUTH_REDIRECT_URL=http://localhost:8080/auth/callback
+export CAP_AUTH_SECURE_COOKIES=true
 
 # TLS configuration via environment variables
 export CAP_AUTH_TLS_INSECURE_SKIP_VERIFY=false
@@ -211,6 +212,16 @@ export CAP_AUTH_TLS_SERVER_NAME=auth.internal
 export CAP_PROXY_TLS_INSECURE_SKIP_VERIFY=false
 export CAP_PROXY_TLS_SERVER_NAME=app.internal
 export CAP_PROXY_TLS_CA_FILE=/etc/ssl/ca/ca.crt
+
+# Cookie encryption keys (base64 encoded)
+export CAP_AUTH_COOKIE_AUTHENTICATION_KEY="your-base64-auth-key"
+export CAP_AUTH_COOKIE_ENCRYPTION_KEY="your-base64-encryption-key"
+
+# Additional configuration
+export CAP_AUTH_SUCCESS_URL="/"
+export CAP_AUTH_ERROR_URL="/auth/error"
+export CAP_AUTH_COOKIE_PATH="/"
+export CAP_OBSERVABILITY_LOGGING_LEVEL=debug
 
 # Run with env vars
 ./console-auth-proxy
@@ -302,24 +313,63 @@ proxy:
 
 ### Environment Variables
 
-All configuration options can be set via environment variables with the `CAP_` prefix:
+All configuration options can be set via environment variables with the `CAP_` prefix using nested structure. The configuration uses Viper's automatic environment variable mapping with key replacement (`.` → `_`, `-` → `_`).
 
-- `CAP_ISSUER_URL`: OIDC provider URL
-- `CAP_CLIENT_ID`: OAuth2 client ID
-- `CAP_CLIENT_SECRET`: OAuth2 client secret
-- `CAP_REDIRECT_URL`: OAuth2 redirect URL
-- `CAP_BACKEND_URL`: Backend application URL
-- `CAP_SECURE_COOKIES`: Use secure cookies (true/false)
+#### **Server Configuration**
+- `CAP_SERVER_LISTEN_ADDRESS`: Server listen address (default: `0.0.0.0:8080`)
+- `CAP_SERVER_READ_TIMEOUT`: Read timeout duration
+- `CAP_SERVER_WRITE_TIMEOUT`: Write timeout duration
+- `CAP_SERVER_IDLE_TIMEOUT`: Idle timeout duration
 
-#### TLS Configuration Variables
+#### **Authentication Configuration**
+- `CAP_AUTH_AUTH_SOURCE`: Authentication source (`oidc` or `openshift`, default: `oidc`)
+- `CAP_AUTH_ISSUER_URL`: OIDC provider URL *(required)*
+- `CAP_AUTH_CLIENT_ID`: OAuth2 client ID *(required)*
+- `CAP_AUTH_CLIENT_SECRET`: OAuth2 client secret *(required)*
+- `CAP_AUTH_REDIRECT_URL`: OAuth2 redirect URL *(required)*
+- `CAP_AUTH_SUCCESS_URL`: Redirect URL after successful login (default: `/`)
+- `CAP_AUTH_ERROR_URL`: Redirect URL after failed login (default: `/auth/error`)
+- `CAP_AUTH_COOKIE_PATH`: Cookie path (default: `/`)
+- `CAP_AUTH_SECURE_COOKIES`: Use secure HTTPS-only cookies (default: `true`)
+- `CAP_AUTH_COOKIE_AUTHENTICATION_KEY`: Base64-encoded cookie authentication key (64 bytes)
+- `CAP_AUTH_COOKIE_ENCRYPTION_KEY`: Base64-encoded cookie encryption key (32 bytes)
+- `CAP_AUTH_SCOPE`: OAuth2 scope (default: `openid,profile,email`)
 
-- `CAP_AUTH_TLS_INSECURE_SKIP_VERIFY`: Skip TLS verification for auth provider (true/false)
+#### **Auth Provider TLS Configuration**
+- `CAP_AUTH_TLS_INSECURE_SKIP_VERIFY`: Skip TLS verification for auth provider (default: `false`)
 - `CAP_AUTH_TLS_SERVER_NAME`: Override SNI server name for auth provider
-- `CAP_PROXY_TLS_INSECURE_SKIP_VERIFY`: Skip TLS verification for backend (true/false)
+
+#### **Proxy Configuration**
+- `CAP_PROXY_BACKEND_URL`: Backend application URL *(required)*
+
+#### **Backend TLS Configuration**
+- `CAP_PROXY_TLS_INSECURE_SKIP_VERIFY`: Skip TLS verification for backend (default: `false`)
 - `CAP_PROXY_TLS_SERVER_NAME`: Override SNI server name for backend
 - `CAP_PROXY_TLS_CA_FILE`: Custom CA file for backend connections
-- `CAP_PROXY_TLS_CERT_FILE`: Client certificate file for backend connections
-- `CAP_PROXY_TLS_KEY_FILE`: Client private key file for backend connections
+- `CAP_PROXY_TLS_CERT_FILE`: Client certificate file for backend connections (mTLS)
+- `CAP_PROXY_TLS_KEY_FILE`: Client private key file for backend connections (mTLS)
+
+#### **Header Configuration**
+- `CAP_PROXY_HEADERS_USER_HEADER`: User identity header (default: `X-Forwarded-User`)
+- `CAP_PROXY_HEADERS_USER_ID_HEADER`: User ID header (default: `X-Forwarded-User-ID`)
+- `CAP_PROXY_HEADERS_EMAIL_HEADER`: Email header (default: `X-Forwarded-Email`)
+- `CAP_PROXY_HEADERS_AUTH_HEADER`: Authorization header (default: `Authorization`)
+- `CAP_PROXY_HEADERS_AUTH_HEADER_VALUE`: Auth header value type (default: `bearer`)
+
+#### **Kubernetes Configuration (OpenShift mode only)**
+- `CAP_AUTH_KUBE_CONFIG_IN_CLUSTER`: Use in-cluster config (default: `false`)
+- `CAP_AUTH_KUBE_CONFIG_CONFIG_PATH`: Path to kubeconfig file
+- `CAP_AUTH_KUBE_CONFIG_SERVER_URL`: Kubernetes API server URL
+- `CAP_AUTH_KUBE_CONFIG_BEARER_TOKEN`: Service account token
+- `CAP_AUTH_KUBE_CONFIG_BEARER_TOKEN_FILE`: Path to service account token file
+- `CAP_AUTH_KUBE_CONFIG_CA_FILE`: Path to Kubernetes CA certificate
+
+#### **Observability Configuration**
+- `CAP_OBSERVABILITY_LOGGING_LEVEL`: Log level (`debug`, `info`, `warn`, `error`, default: `info`)
+- `CAP_OBSERVABILITY_LOGGING_FORMAT`: Log format (`json`, `text`, default: `text`)
+- `CAP_OBSERVABILITY_LOGGING_OUTPUT`: Log output (`stdout`, `stderr`, or file path)
+- `CAP_OBSERVABILITY_METRICS_ENABLED`: Enable Prometheus metrics (default: `false`)
+- `CAP_OBSERVABILITY_METRICS_PATH`: Metrics endpoint path (default: `/metrics`)
 
 ### Configuration Files
 
@@ -399,19 +449,19 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: CAP_ISSUER_URL
+        - name: CAP_AUTH_ISSUER_URL
           value: "https://your-oidc-provider.com"
-        - name: CAP_CLIENT_ID
+        - name: CAP_AUTH_CLIENT_ID
           valueFrom:
             secretKeyRef:
               name: oauth-credentials
               key: client-id
-        - name: CAP_CLIENT_SECRET
+        - name: CAP_AUTH_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: oauth-credentials
               key: client-secret
-        - name: CAP_BACKEND_URL
+        - name: CAP_PROXY_BACKEND_URL
           value: "http://backend-service:3000"
         livenessProbe:
           httpGet:
