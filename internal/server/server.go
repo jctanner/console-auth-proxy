@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 
 	"github.com/jctanner/console-auth-proxy/internal/config"
@@ -122,11 +124,16 @@ func createAuthenticator(cfg *config.Config, metrics *auth.Metrics) (auth.Authen
 		return static.NewStaticAuthenticator(user), nil
 
 	case "openshift", "oidc":
-		// Get Kubernetes configuration
-		k8sConfig, err := cfg.Auth.GetKubernetesConfig()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get Kubernetes config: %w", err)
+		// Get Kubernetes configuration (only for OpenShift, not pure OIDC)
+		var k8sConfig *rest.Config
+		var err error
+		if cfg.Auth.AuthSource == "openshift" {
+			k8sConfig, err = cfg.Auth.GetKubernetesConfig()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get Kubernetes config: %w", err)
+			}
 		}
+		// For pure OIDC, k8sConfig remains nil
 
 		// Determine auth source
 		var authSource oauth2.AuthSource
@@ -140,8 +147,25 @@ func createAuthenticator(cfg *config.Config, metrics *auth.Metrics) (auth.Authen
 		}
 
 		// Prepare cookie encryption keys
-		cookieAuthKey := []byte(cfg.Auth.CookieAuthenticationKey)
-		cookieEncryptKey := []byte(cfg.Auth.CookieEncryptionKey)
+		var cookieAuthKey []byte
+		var cookieEncryptKey []byte
+		
+		// Decode base64 keys if provided
+		if cfg.Auth.CookieAuthenticationKey != "" {
+			var err error
+			cookieAuthKey, err = base64.StdEncoding.DecodeString(cfg.Auth.CookieAuthenticationKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode cookie authentication key: %w", err)
+			}
+		}
+		
+		if cfg.Auth.CookieEncryptionKey != "" {
+			var err error
+			cookieEncryptKey, err = base64.StdEncoding.DecodeString(cfg.Auth.CookieEncryptionKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode cookie encryption key: %w", err)
+			}
+		}
 
 		// Generate keys if not provided (development only)
 		if len(cookieAuthKey) == 0 {

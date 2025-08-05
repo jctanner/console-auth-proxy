@@ -112,7 +112,7 @@ func setupInfoRoutes(mux *http.ServeMux) {
 }
 
 // handleAuthCallback handles successful OAuth2 authentication
-func handleAuthCallback(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter) {
+func handleAuthCallback(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter, r *http.Request) {
 	klog.V(4).Infof("Authentication successful for user: %s", loginInfo.UserID)
 	
 	// Set a cookie with user info for debugging (optional)
@@ -122,7 +122,7 @@ func handleAuthCallback(loginInfo sessions.LoginJSON, successURL string, w http.
 	}
 
 	// Redirect to success URL
-	http.Redirect(w, &http.Request{}, successURL, http.StatusSeeOther)
+	http.Redirect(w, r, successURL, http.StatusSeeOther)
 }
 
 // handleAuthInfo returns current authentication information

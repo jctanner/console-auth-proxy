@@ -345,7 +345,7 @@ func (a *OAuth2Authenticator) LogoutFunc(w http.ResponseWriter, r *http.Request)
 
 // CallbackFunc handles OAuth2 callbacks and code/token exchange.
 // Requests with unexpected params are redirected to the root route.
-func (a *OAuth2Authenticator) CallbackFunc(fn func(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter)) func(w http.ResponseWriter, r *http.Request) {
+func (a *OAuth2Authenticator) CallbackFunc(fn func(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		qErr := q.Get("error")
@@ -404,7 +404,7 @@ func (a *OAuth2Authenticator) CallbackFunc(fn func(loginInfo sessions.LoginJSON,
 		}
 
 		klog.Infof("oauth success, redirecting to: %q", a.successURL)
-		fn(ls.ToLoginJSON(), a.successURL, w)
+		fn(ls.ToLoginJSON(), a.successURL, w, r)
 	}
 }
 

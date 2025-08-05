@@ -11,7 +11,7 @@ type Authenticator interface {
 
 	LoginFunc(w http.ResponseWriter, req *http.Request)
 	LogoutFunc(w http.ResponseWriter, req *http.Request)
-	CallbackFunc(fn func(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter)) func(w http.ResponseWriter, req *http.Request)
+	CallbackFunc(fn func(loginInfo sessions.LoginJSON, successURL string, w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, req *http.Request)
 
 	GetOCLoginCommand() string
 	LogoutRedirectURL() string

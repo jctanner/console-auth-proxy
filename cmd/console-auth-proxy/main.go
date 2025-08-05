@@ -73,6 +73,13 @@ authentication module to provide OAuth2/OIDC authentication for backend applicat
 	viper.BindPFlag("proxy.tls.ca_file", rootCmd.PersistentFlags().Lookup("proxy-tls-ca-file"))
 	viper.BindPFlag("proxy.tls.cert_file", rootCmd.PersistentFlags().Lookup("proxy-tls-cert-file"))
 	viper.BindPFlag("proxy.tls.key_file", rootCmd.PersistentFlags().Lookup("proxy-tls-key-file"))
+	
+	// Explicitly bind environment variables for cookie keys (no CLI flags for these)
+	viper.BindEnv("auth.cookie_authentication_key", "CAP_AUTH_COOKIE_AUTHENTICATION_KEY")
+	viper.BindEnv("auth.cookie_encryption_key", "CAP_AUTH_COOKIE_ENCRYPTION_KEY")
+	viper.BindEnv("auth.success_url", "CAP_AUTH_SUCCESS_URL")
+	viper.BindEnv("auth.error_url", "CAP_AUTH_ERROR_URL")
+	viper.BindEnv("auth.cookie_path", "CAP_AUTH_COOKIE_PATH")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

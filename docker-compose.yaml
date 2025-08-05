@@ -18,7 +18,13 @@ services:
       CAP_AUTH_CLIENT_ID: "console-auth-proxy"
       CAP_AUTH_CLIENT_SECRET: "console-secret-key"
       CAP_AUTH_REDIRECT_URL: "http://localhost:8080/auth/callback"
+      CAP_AUTH_SUCCESS_URL: "/"
+      CAP_AUTH_ERROR_URL: "/auth/error"
       CAP_AUTH_COOKIE_PATH: "/"
+      
+      # Cookie encryption keys (fixed for development to prevent session loss on restart)
+      CAP_AUTH_COOKIE_AUTHENTICATION_KEY: "i1d2T3I9u91yXUXX/HzH48j3BWTsMELS17OCLtX4+ybcvD4dhbPFk3lvev1m+Gv63iiSB/eRzMiuciH3BGllUg=="
+      CAP_AUTH_COOKIE_ENCRYPTION_KEY: "f8LnfLCDyr4mBoZWDloKECTq4bEyjzJVNQFUhWZed5M="
       
       # Backend Configuration  
       CAP_PROXY_BACKEND_URL: "http://backend-app:8080"
