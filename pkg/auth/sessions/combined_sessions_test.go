@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/securecookie"
-	"github.com/your-org/console-auth-proxy/pkg/utils"
+	"github.com/jctanner/console-auth-proxy/pkg/utils"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 	utilptr "k8s.io/utils/ptr"

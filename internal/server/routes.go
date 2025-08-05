@@ -8,11 +8,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/klog/v2"
 
-	"github.com/your-org/console-auth-proxy/internal/config"
-	"github.com/your-org/console-auth-proxy/internal/proxy"
-	"github.com/your-org/console-auth-proxy/internal/version"
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/internal/config"
+	"github.com/jctanner/console-auth-proxy/internal/proxy"
+	"github.com/jctanner/console-auth-proxy/internal/version"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
 )
 
 // setupRoutes configures all HTTP routes for the server

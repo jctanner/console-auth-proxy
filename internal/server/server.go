@@ -10,11 +10,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
 
-	"github.com/your-org/console-auth-proxy/internal/config"
-	"github.com/your-org/console-auth-proxy/internal/proxy"
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/oauth2"
-	"github.com/your-org/console-auth-proxy/pkg/auth/static"
+	"github.com/jctanner/console-auth-proxy/internal/config"
+	"github.com/jctanner/console-auth-proxy/internal/proxy"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/oauth2"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/static"
 )
 
 // Server represents the HTTP server

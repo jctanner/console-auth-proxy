@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
 )
 
 const (

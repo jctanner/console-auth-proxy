@@ -17,8 +17,8 @@ import (
 	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
 	oscrypto "github.com/openshift/library-go/pkg/crypto"
 
 	"k8s.io/client-go/rest"
@@ -145,50 +145,79 @@ type completedConfig struct {
 	clientFunc func() *http.Client
 }
 
-func newHTTPClient(issuerCA string, includeSystemRoots bool) (*http.Client, error) {
-	if issuerCA == "" {
-		return http.DefaultClient, nil
-	}
-	data, err := os.ReadFile(issuerCA)
-	if err != nil {
-		return nil, fmt.Errorf("load issuer CA file %s: %v", issuerCA, err)
-	}
-
-	caKey := string(data)
-	var certPool *x509.CertPool
+func newHTTPClient(issuerCA string, includeSystemRoots bool, insecureSkipVerify bool, serverName string) (*http.Client, error) {
+	// Create a cache key that includes all TLS parameters
+	cacheKey := fmt.Sprintf("%s|%t|%t|%s", issuerCA, includeSystemRoots, insecureSkipVerify, serverName)
+	
+	// Check cache first
 	if includeSystemRoots {
-		if httpClient, ok := httpClientCacheSystemRoots.Load(caKey); ok {
+		if httpClient, ok := httpClientCacheSystemRoots.Load(cacheKey); ok {
 			return httpClient.(*http.Client), nil
-		}
-		certPool, err = x509.SystemCertPool()
-		if err != nil {
-			klog.Errorf("error copying system cert pool: %v", err)
-			certPool = x509.NewCertPool()
 		}
 	} else {
-		if httpClient, ok := httpClientCache.Load(caKey); ok {
+		if httpClient, ok := httpClientCache.Load(cacheKey); ok {
 			return httpClient.(*http.Client), nil
 		}
-		certPool = x509.NewCertPool()
 	}
-	if !certPool.AppendCertsFromPEM(data) {
-		return nil, fmt.Errorf("file %s contained no CA data", issuerCA)
+
+	// Create base TLS config
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecureSkipVerify,
+	}
+	
+	// Set server name if provided
+	if serverName != "" {
+		tlsConfig.ServerName = serverName
+	}
+
+	// Handle custom CA if provided
+	if issuerCA != "" {
+		data, err := os.ReadFile(issuerCA)
+		if err != nil {
+			return nil, fmt.Errorf("load issuer CA file %s: %v", issuerCA, err)
+		}
+
+		var certPool *x509.CertPool
+		if includeSystemRoots {
+			certPool, err = x509.SystemCertPool()
+			if err != nil {
+				klog.Errorf("error copying system cert pool: %v", err)
+				certPool = x509.NewCertPool()
+			}
+		} else {
+			certPool = x509.NewCertPool()
+		}
+		
+		if !certPool.AppendCertsFromPEM(data) {
+			return nil, fmt.Errorf("file %s contained no CA data", issuerCA)
+		}
+		
+		tlsConfig.RootCAs = certPool
+	} else {
+		// If no custom CA and we want to use system roots, use default behavior
+		if includeSystemRoots {
+			certPool, err := x509.SystemCertPool()
+			if err != nil {
+				klog.Errorf("error copying system cert pool: %v", err)
+			} else {
+				tlsConfig.RootCAs = certPool
+			}
+		}
 	}
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
-			TLSClientConfig: oscrypto.SecureTLSConfig(&tls.Config{
-				RootCAs: certPool,
-			}),
+			TLSClientConfig: oscrypto.SecureTLSConfig(tlsConfig),
 		},
 		Timeout: time.Second * 5,
 	}
 
+	// Cache the client
 	if includeSystemRoots {
-		httpClientCacheSystemRoots.Store(caKey, httpClient)
+		httpClientCacheSystemRoots.Store(cacheKey, httpClient)
 	} else {
-		httpClientCache.Store(caKey, httpClient)
+		httpClientCache.Store(cacheKey, httpClient)
 	}
 
 	return httpClient, nil

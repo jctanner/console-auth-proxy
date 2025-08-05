@@ -26,9 +26,9 @@ ARG BUILD_DATE=unknown
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s \
-    -X github.com/your-org/console-auth-proxy/internal/version.Version=${VERSION} \
-    -X github.com/your-org/console-auth-proxy/internal/version.GitCommit=${GIT_COMMIT} \
-    -X github.com/your-org/console-auth-proxy/internal/version.BuildDate=${BUILD_DATE}" \
+    		-X github.com/jctanner/console-auth-proxy/internal/version.Version=${VERSION} \
+		-X github.com/jctanner/console-auth-proxy/internal/version.GitCommit=${GIT_COMMIT} \
+		-X github.com/jctanner/console-auth-proxy/internal/version.BuildDate=${BUILD_DATE}" \
     -o console-auth-proxy \
     ./cmd/console-auth-proxy
 
@@ -77,4 +77,4 @@ LABEL org.opencontainers.image.title="Console Auth Proxy"
 LABEL org.opencontainers.image.description="Standalone authentication reverse proxy using OpenShift Console auth module"
 LABEL org.opencontainers.image.vendor="Console Auth Proxy"
 LABEL org.opencontainers.image.licenses="Apache-2.0"
-LABEL org.opencontainers.image.source="https://github.com/your-org/console-auth-proxy"
+LABEL org.opencontainers.image.source="https://github.com/jctanner/console-auth-proxy"

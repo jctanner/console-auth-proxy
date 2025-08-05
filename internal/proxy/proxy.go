@@ -13,9 +13,9 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/your-org/console-auth-proxy/internal/config"
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/csrfverifier"
+	"github.com/jctanner/console-auth-proxy/internal/config"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/csrfverifier"
 )
 
 // AuthenticatedProxy provides reverse proxy functionality with authentication

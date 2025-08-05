@@ -39,9 +39,9 @@ fi
 mkdir -p "${BUILD_DIR}"
 
 # Build flags for version information
-LDFLAGS="-X github.com/your-org/console-auth-proxy/internal/version.Version=${VERSION}"
-LDFLAGS="${LDFLAGS} -X github.com/your-org/console-auth-proxy/internal/version.GitCommit=${GIT_COMMIT}"
-LDFLAGS="${LDFLAGS} -X github.com/your-org/console-auth-proxy/internal/version.BuildDate=${BUILD_DATE}"
+LDFLAGS="-X github.com/jctanner/console-auth-proxy/internal/version.Version=${VERSION}"
+LDFLAGS="${LDFLAGS} -X github.com/jctanner/console-auth-proxy/internal/version.GitCommit=${GIT_COMMIT}"
+LDFLAGS="${LDFLAGS} -X github.com/jctanner/console-auth-proxy/internal/version.BuildDate=${BUILD_DATE}"
 
 log "Building Console Auth Proxy..."
 log "Version: ${VERSION}"

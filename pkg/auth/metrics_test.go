@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
-	"github.com/your-org/console-auth-proxy/pkg/metrics"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/metrics"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/rest"
 )

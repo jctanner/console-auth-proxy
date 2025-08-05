@@ -20,11 +20,11 @@ import (
 
 	oauthv1client "github.com/openshift/client-go/oauth/clientset/versioned/typed/oauth/v1"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
-	"github.com/your-org/console-auth-proxy/pkg/proxy"
-	"github.com/your-org/console-auth-proxy/pkg/serverutils/asynccache"
-	"github.com/your-org/console-auth-proxy/pkg/utils"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/proxy"
+	"github.com/jctanner/console-auth-proxy/pkg/serverutils/asynccache"
+	"github.com/jctanner/console-auth-proxy/pkg/utils"
 )
 
 // openShiftAuth implements OpenShift Authentication as defined in:

@@ -24,7 +24,7 @@ A standalone authentication reverse proxy service that extracts and reuses the m
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/console-auth-proxy.git
+git clone https://github.com/jctanner/console-auth-proxy.git
 cd console-auth-proxy
 
 # Build the binary

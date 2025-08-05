@@ -13,9 +13,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/your-org/console-auth-proxy/internal/config"
-	"github.com/your-org/console-auth-proxy/internal/server"
-	"github.com/your-org/console-auth-proxy/internal/version"
+	"github.com/jctanner/console-auth-proxy/internal/config"
+	"github.com/jctanner/console-auth-proxy/internal/server"
+	"github.com/jctanner/console-auth-proxy/internal/version"
 )
 
 var (

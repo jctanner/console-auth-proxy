@@ -10,9 +10,9 @@ import (
 	oidc "github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
-	"github.com/your-org/console-auth-proxy/pkg/serverutils/asynccache"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/serverutils/asynccache"
 )
 
 type oauth2ConfigConstructor func(oauth2.Endpoint) *oauth2.Config

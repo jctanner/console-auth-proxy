@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
 	"github.com/prometheus/client_golang/prometheus"
 	authv1 "k8s.io/api/authorization/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

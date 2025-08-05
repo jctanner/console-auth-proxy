@@ -27,10 +27,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
-	"github.com/your-org/console-auth-proxy/pkg/metrics"
-	"github.com/your-org/console-auth-proxy/pkg/utils"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/metrics"
+	"github.com/jctanner/console-auth-proxy/pkg/utils"
 )
 
 const (

@@ -1,4 +1,4 @@
-module github.com/your-org/console-auth-proxy
+module github.com/jctanner/console-auth-proxy
 
 go 1.23.6
 

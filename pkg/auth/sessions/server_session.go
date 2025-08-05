@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/your-org/console-auth-proxy/pkg/utils"
+	"github.com/jctanner/console-auth-proxy/pkg/utils"
 	"golang.org/x/oauth2"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog/v2"

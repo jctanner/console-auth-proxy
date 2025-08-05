@@ -3,8 +3,8 @@ package static
 import (
 	"net/http"
 
-	"github.com/your-org/console-auth-proxy/pkg/auth"
-	"github.com/your-org/console-auth-proxy/pkg/auth/sessions"
+	"github.com/jctanner/console-auth-proxy/pkg/auth"
+	"github.com/jctanner/console-auth-proxy/pkg/auth/sessions"
 )
 
 type StaticAuthenticator struct {
