@@ -192,8 +192,8 @@ func createAuthenticator(cfg *config.Config, metrics *auth.Metrics) (auth.Authen
 			ErrorURL:                   cfg.Auth.ErrorURL,
 			CookiePath:                 cfg.Auth.CookiePath,
 			SecureCookies:              cfg.Auth.SecureCookies,
-			CookieEncryptionKey:        cookieEncryptKey,
-			CookieAuthenticationKey:    cookieAuthKey,
+			CookieEncryptionKey:        cookieEncryptKey,        // Now using decoded bytes
+			CookieAuthenticationKey:    cookieAuthKey,           // Now using decoded bytes  
 			TLS: oauth2.TLSConfig{
 				InsecureSkipVerify: cfg.Auth.TLS.InsecureSkipVerify,
 				ServerName:         cfg.Auth.TLS.ServerName,
